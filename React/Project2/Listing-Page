@@ -1,0 +1,50 @@
+import React, { useEffect, useState } from "react";
+import ApartmentCard from "./ApartmentCard";
+
+function ListingPage() {
+  // State to hold the list of apartments fetched from the server
+  const [apartments, setApartments] = useState([]);
+
+  // Fetch the apartments when the component mounts
+  useEffect(() => {
+    fetch("http://localhost:3001/apartments")
+      .then((res) => res.json())
+      .then((data) => setApartments(data)) // Save data in state
+      .catch((err) => console.error("Error fetching apartments:", err));
+  }, []); // Empty dependency array → runs only once on mount
+
+  // Handler to toggle the "booked" status of an apartment
+  const handleToggleBooked = (id, booked) => {
+    fetch(`http://localhost:3001/apartments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ booked: !booked }) // Flip the booked value
+    })
+      .then((res) => res.json())
+      .then((updated) => {
+        // Update the local state with the updated apartment
+        setApartments((prev) =>
+          prev.map((apt) => (apt.id === updated.id ? updated : apt))
+        );
+      });
+  };
+
+  return (
+    <div>
+      <h2>All Apartments</h2>
+
+      {/* Container for the list of apartments */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+        {apartments.map((apt) => (
+          <ApartmentCard
+            key={apt.id}
+            apartment={apt}
+            onToggleBooked={handleToggleBooked}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default ListingPage;
